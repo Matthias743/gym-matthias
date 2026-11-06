@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>GYM Matthias</title>
+<meta name="description" content="Gym tracker for my weekly program: sets, reps, kg, progression hints, rest timer. Works offline.">
+<meta name="theme-color" content="#f3f5f8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f1319" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="stylesheet" href="style.css">
+<script src="app.js" defer></script>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="plates" aria-hidden="true"><i style="height:30px;background:var(--red)"></i><i style="height:26px;background:var(--accent)"></i><i style="height:22px;background:var(--yellow)"></i><i style="height:18px;background:var(--green)"></i></div>
+      <h1>GYM Matthias</h1>
+    </div>
+    <div class="top-actions">
+      <button id="install" type="button" class="primary" hidden>Install app</button>
+      <div class="status" id="status" role="status">Saved on this phone</div>
+    </div>
+  </header>
+
+  <div class="banner" id="update" hidden><span>A new version of the app is ready.</span><button type="button" id="update-btn" class="primary">Update</button></div>
+
+  <nav class="tabs" role="tablist">
+    <button role="tab" id="tab-week" aria-selected="true" data-tab="week">Week</button>
+    <button role="tab" id="tab-progress" aria-selected="false" data-tab="progress">Progress</button>
+    <button role="tab" id="tab-program" aria-selected="false" data-tab="program">Program</button>
+  </nav>
+
+  <!-- WEEK -->
+  <section id="view-week" style="display:grid;gap:14px">
+    <div class="weekbar">
+      <button class="icon" id="prev" aria-label="Previous week">‹</button>
+      <div class="mid"><b id="week-title">This week</b><span class="hint num" id="week-range"></span></div>
+      <button class="icon" id="next" aria-label="Next week">›</button>
+    </div>
+    <div class="counter" id="counter">
+      <div class="big num" id="count">0<small>/4</small></div>
+      <div style="min-width:0">
+        <div class="label">Sessions this week</div>
+        <div class="dots" id="dots"></div>
+        <div class="goal-line" id="goal-line"></div>
+      </div>
+    </div>
+    <p class="hint" style="margin:0">One line per set: <b>kg</b> and <b>reps</b>. Leave kg empty on the next sets if the weight doesn't change. Tap the grey <b>Last</b> line to copy what you did last time. Tick <b>Went</b> if you trained without logging numbers.</p>
+    <div class="sessions" id="sessions"></div>
+    <div style="display:flex;justify-content:center"><button id="go-today" hidden>Back to this week</button></div>
+  </section>
+
+  <!-- PROGRESS -->
+  <section id="view-progress" hidden style="display:grid;gap:14px">
+    <div class="stats">
+      <div class="stat"><span class="label">Avg / week</span><b id="s-avg">–</b><small>last 8 weeks</small></div>
+      <div class="stat"><span class="label">Week streak</span><b id="s-streak">–</b><small>weeks at goal</small></div>
+      <div class="stat"><span class="label">Total</span><b id="s-total">–</b><small>sessions logged</small></div>
+    </div>
+    <section class="panel">
+      <div class="panel-head"><h2>Sessions per week</h2>
+        <label class="goal-set">Goal <input type="number" id="goal" min="1" max="7" step="1" inputmode="numeric"> per week</label></div>
+      <div id="freq-chart"></div>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><h2>Exercise</h2><select id="ex-select" aria-label="Exercise" style="width:auto;max-width:100%"></select></div>
+      <div id="prog-chart"></div>
+      <div class="pr" id="pr"></div>
+      <div style="overflow-x:auto" id="prog-table"></div>
+    </section>
+    <section class="panel" id="backup-panel">
+      <div class="panel-head"><h2>Backup</h2></div>
+      <p class="hint" style="margin:0">Your data lives only on this phone. Download a backup from time to time, and restore it here if you change phone or clear your browser data. A CSV table exported earlier can be imported too.</p>
+      <div class="actions">
+        <button id="export-json" type="button">Download backup (JSON)</button>
+        <button id="export-csv" type="button">Download table (CSV)</button>
+        <button id="import-btn" type="button">Import a file…</button>
+        <input type="file" id="import-file" accept=".json,.csv,application/json,text/csv" hidden>
+      </div>
+      <div class="confirm" id="import-confirm" hidden><span id="import-text"></span><button type="button" class="primary" id="import-yes">Import</button><button type="button" id="import-no">Cancel</button></div>
+      <span class="msg" id="export-msg" role="status"></span>
+    </section>
+  </section>
+
+  <!-- PROGRAM -->
+  <section id="view-program" hidden style="display:grid;gap:14px">
+    <section class="panel">
+      <div class="panel-head"><h2>Your program</h2></div>
+      <p class="hint" style="margin:0">Rename, add or remove exercises and sessions. Write targets like <b>3×8-10 · 2'</b> so the set lines, the rest timer and the progression hint work. Exercises with the same name share their history. Your past numbers are kept even if you remove something.</p>
+      <div id="p-editor" style="display:grid;gap:12px"></div>
+      <div><button id="p-add-session" type="button">+ Add session</button></div>
+      <div class="actions">
+        <button class="primary" id="p-save" type="button" disabled>Save program</button>
+        <button id="p-discard" type="button" hidden>Discard changes</button>
+        <span class="msg" id="p-msg" role="status"></span>
+      </div>
+    </section>
+  </section>
+</div>
+
+<div class="timerbar" id="timerbar" hidden role="timer" aria-live="polite">
+  <div class="t-info"><span id="t-name">Rest</span><b id="t-left">0:00</b></div>
+  <div class="t-btns"><button type="button" id="t-plus">+15s</button><button type="button" id="t-stop">Stop</button></div>
+</div>
+</body>
+</html>
